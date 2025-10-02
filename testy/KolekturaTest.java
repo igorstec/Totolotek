@@ -9,19 +9,20 @@ import totolotek.kupon.Kupon;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 public class KolekturaTest {
-
 
     @Test
     public void testSprzedajKuponChybilTraf_Poprawny() {
+        // given - Budżet, centrala, kolektura, gracz z wystarczającą liczbą środków
         BudzetPanstwa budzet = new BudzetPanstwa();
         Centrala centrala = new Centrala(1_000_000L, budzet);
         Kolektura kolektura = new Kolektura(1, centrala);
         GraczMinimalista gracz = new GraczMinimalista("Jan", "Kowalski", "12345678901", 10_000L, kolektura);
 
+        // when: gracz kupuje poprawny kupon chybił trafił
         Kupon kupon = kolektura.sprzedajKuponChybilTraf(1, 1, gracz);
 
+        // then: kupon został wystawiony, ilości są poprawne, środki zostały odjęte
         assertNotNull(kupon);
         assertEquals(1, kupon.getIleZakladow());
         assertEquals(1, kupon.getLiczbaLosowan());
@@ -30,18 +31,22 @@ public class KolekturaTest {
 
     @Test
     public void testSprzedajKuponChybilTraf_ZaMaloSrodkow() {
+        // given: Budżet, centrala, kolektura, gracz z niewystarczającą liczbą środków
         BudzetPanstwa budzet = new BudzetPanstwa();
         Centrala centrala = new Centrala(1_000_000L, budzet);
         Kolektura kolektura = new Kolektura(1, centrala);
         GraczMinimalista gracz = new GraczMinimalista("Jan", "Kowalski", "12345678901", 100L, kolektura);
 
+        // when: gracz próbuje kupić kupon chybił trafił
         Kupon kupon = kolektura.sprzedajKuponChybilTraf(1, 1, gracz);
 
+        // then: kupon nie został wystawiony (brak środków)
         assertNull(kupon);
     }
+
     @Test
     public void testWyplacKupon_WrongKolektura_ThrowsException() {
-        // Przygotowanie środowiska testowego
+        // given: Budżet, centrala, dwie kolektury i gracz z kuponem w jednej z nich
         BudzetPanstwa budzet = new BudzetPanstwa();
         Centrala centrala = new Centrala(1_000_000_000L, budzet);
 
@@ -52,21 +57,16 @@ public class KolekturaTest {
 
         GraczMinimalista gracz = new GraczMinimalista("Jan", "Kowalski", "12345678901", 10_000L, kolektura1);
 
-        // Gracz kupuje kupon w kolekturze 1
+        // when: gracz kupuje kupon, a potem próbuje wypłacić go w niewłaściwej kolekturze
         Kupon kupon = kolektura1.sprzedajKuponChybilTraf(1, 1, gracz);
         assertNotNull(kupon);
 
-        // Próba wypłaty tego kuponu w niewłaściwej kolekturze powinna rzucić wyjątek
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            gracz.wyplacKupon(0, kolektura2);
-        });
+        // then: rzucany jest odpowiedni wyjątek z komunikatem
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> gracz.wyplacKupon(0, kolektura2));
 
         String expectedMessage = "Błędna próba wypłaty wygranej kuponu";
         String actualMessage = exception.getMessage();
 
         assertTrue(actualMessage.contains(expectedMessage));
     }
-
-
-
 }
